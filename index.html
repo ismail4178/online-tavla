@@ -1,1 +1,108 @@
 
+<!DOCTYPE html><html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Online Tavla</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+html, body {
+  margin: 0; padding: 0;
+  background: #0f172a;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  height: 100%;
+}#app { display: flex; flex-direction: column; height: 100%; }
+
+button { padding: 14px; border-radius: 12px; border: none; font-size: 16px; }
+
+#menu { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+
+#board { display: none; flex: 1; background: #1e293b; }
+
+#popup { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; }
+
+#popupContent { background: #020617; padding: 20px; border-radius: 16px; width: 90%; max-width: 320px; text-align: center; }
+
+#roomCode { font-size: 28px; letter-spacing: 4px; margin: 16px 0; cursor: pointer; }
+
+#dice { display: flex; gap: 20px; justify-content: center; font-size: 32px; margin-top: 10px; }
+
+@media (orientation: portrait) { #rotateWarn { display: flex; } }
+
+#rotateWarn { display: none; position: fixed; inset: 0; background: #020617; align-items: center; justify-content: center; font-size: 20px; } </style>
+
+</head>
+<body>
+<div id="rotateWarn">📱 Telefonu yatay çevir</div><div id="app">
+  <div id="menu">
+    <button onclick="createRoom()">🏠 Oda Kur</button>
+    <input id="joinInput" placeholder="Oda Kodu" style="padding:12px;border-radius:10px" />
+    <button onclick="joinRoom()">➡️ Odaya Katıl</button>
+  </div>  <div id="board">
+    <h2 id="status">Oyun</h2>
+    <div id="dice">
+      <div id="d1">-</div>
+      <div id="d2">-</div>
+    </div>
+    <button onclick="leaveRoom()">🚪 Dağıt</button>
+  </div>
+</div><div id="popup">
+  <div id="popupContent">
+    <h3>ODA KODU</h3>
+    <div id="roomCode" onclick="copyCode()">----</div>
+    <button onclick="shareCode()">📤 Paylaş</button><br/><br/>
+    <button onclick="closePopup()">Devam Et</button>
+  </div>
+</div><script>
+const socket = io();
+let currentRoom = null;
+
+function createRoom() {
+  socket.emit("createRoom");
+}
+
+function joinRoom() {
+  const code = document.getElementById("joinInput").value.toUpperCase();
+  socket.emit("joinRoom", code);
+}
+
+function leaveRoom() {
+  location.reload();
+}
+
+socket.on("roomCreated", code => {
+  currentRoom = code;
+  document.getElementById("roomCode").innerText = code;
+  document.getElementById("popup").style.display = "flex";
+});
+
+socket.on("gameStart", data => {
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("board").style.display = "block";
+  document.getElementById("status").innerText = "Oyun Başladı";
+  document.getElementById("d1").innerText = data.dice[0];
+  document.getElementById("d2").innerText = data.dice[1];
+});
+
+socket.on("roomError", msg => alert(msg));
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(currentRoom);
+  alert("Kopyalandı");
+}
+
+function shareCode() {
+  if (navigator.share) {
+    navigator.share({ text: "Tavla odama gel: " + currentRoom });
+  } else {
+    copyCode();
+  }
+}
+</script></body>
+</html>
