@@ -2,27 +2,24 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tavla Online</title>
 <link rel="stylesheet" href="style.css">
 <script src="/socket.io/socket.io.js"></script>
 </head>
 
-<body>
-<h1>🎲 Tavla Online</h1>
+<body class="login">
 
-<input id="nick" placeholder="Kullanıcı Adı">
+<div class="login-box">
+  <h1>🎲 Tavla Online</h1>
 
-<div class="box">
+  <input id="nick" placeholder="Kullanıcı adın">
+  
   <button onclick="createRoom()">➕ Oda Oluştur</button>
+  <button onclick="joinRoom()">🔑 Odaya Gir</button>
+
   <div id="roomInfo"></div>
 </div>
-
-<div class="box">
-  <button onclick="goJoin()">🔑 Odaya Gir</button>
-</div>
-
-<h3>📋 Açık Odalar</h3>
-<ul id="rooms"></ul>
 
 <script src="lobby.js"></script>
 </body>
