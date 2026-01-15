@@ -1,49 +1,57 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(__dirname));
+// INDEX.HTML SERVE ET
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
+// ODA SİSTEMİ
 const rooms = {};
+
+function rollDice() {
+  return [
+    1 + Math.floor(Math.random() * 6),
+    1 + Math.floor(Math.random() * 6)
+  ];
+}
 
 io.on("connection", socket => {
 
-  socket.on("createRoom", ({ nickname }) => {
-    const room = Math.random().toString(36).substring(2, 7).toUpperCase();
-    rooms[room] = { players: [{ id: socket.id, name: nickname }] };
-    socket.join(room);
-    socket.emit("roomCreated", room);
+  socket.on("createRoom", () => {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+    rooms[code] = { players: [socket.id] };
+    socket.join(code);
+    socket.emit("roomCreated", code);
   });
 
-  socket.on("joinRoom", ({ room, nickname }) => {
-    if (!rooms[room] || rooms[room].players.length >= 2) {
-      socket.emit("roomError");
+  socket.on("joinRoom", code => {
+    const room = rooms[code];
+    if (!room) {
+      socket.emit("roomError", "Oda bulunamadı");
       return;
     }
-    rooms[room].players.push({ id: socket.id, name: nickname });
-    socket.join(room);
-    io.to(room).emit("players", rooms[room].players);
-    io.to(room).emit("startGame");
-  });
-
-  socket.on("rollDice", room => {
-    const dice = [
-      Math.ceil(Math.random() * 6),
-      Math.ceil(Math.random() * 6)
-    ];
-    io.to(room).emit("diceResult", dice);
-  });
-
-  socket.on("disconnect", () => {
-    for (const r in rooms) {
-      rooms[r].players = rooms[r].players.filter(p => p.id !== socket.id);
-      if (rooms[r].players.length === 0) delete rooms[r];
+    if (room.players.length >= 2) {
+      socket.emit("roomError", "Oda dolu");
+      return;
     }
+
+    room.players.push(socket.id);
+    socket.join(code);
+
+    io.to(code).emit("gameStart", {
+      dice: rollDice()
+    });
   });
+
 });
 
-server.listen(3000, () => console.log("Server çalışıyor"));
+server.listen(process.env.PORT || 3000, () => {
+  console.log("Server çalışıyor");
+});
