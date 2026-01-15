@@ -1,149 +1,107 @@
-<!DOCTYPE html>
-<html lang="tr">
+<!DOCTYPE html><html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-height, initial-scale=1.0">
-<title>Tavla</title>
-<script src="/socket.io/socket.io.js"></script>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Online Tavla</title>
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0f172a;
-  color:white;
-  overflow:hidden;
-}
-#rotate {
-  position:fixed;
-  inset:0;
-  background:black;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-}
-@media (orientation:portrait) {
-  #rotate { display:flex; }
-}
-#app {
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-header {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#020617;
-}
-#board {
-  flex:1;
-  background:#1e293b;
-  margin:10px;
-  border-radius:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:32px;
-}
-button {
-  padding:12px 20px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-}
-.popup {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.popup > div {
-  background:#020617;
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  width:300px;
-}
-input {
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-}
-</style>
+/* ZORUNLU YATAY */
+@media screen and (orientation: portrait) {
+  body::before {
+    content: "Oyunu oynamak için telefonu yatay çevir";
+    position: fixed;
+    inset: 0;
+    background: #0f172a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    z-index: 9999;
+    text-align: center;
+  }
+}body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(135deg,#0f172a,#1e293b); color: #fff; }
+
+/* ANA EKRAN */ #menu { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+
+button { padding: 14px 24px; font-size: 18px; border: none; border-radius: 10px; background: #22c55e; color: #000; }
+
+input { padding: 12px; font-size: 18px; border-radius: 8px; border: none; }
+
+/* POPUP */ #popup { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; }
+
+#popupBox { background: #1e293b; padding: 30px; border-radius: 16px; text-align: center; width: 300px; }
+
+#roomCode { font-size: 28px; letter-spacing: 4px; margin: 20px 0; }
+
+/* TAVLA */ #game { display: none; height: 100vh; padding: 10px; }
+
+#board { height: 100%; background: #1e3a5f; border-radius: 20px; display: grid; grid-template-columns: repeat(12,1fr); grid-template-rows: 1fr 1fr; gap: 4px; padding: 10px; }
+
+.point { background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+
+.point.bottom { justify-content: flex-end; }
+
+.stone { width: 28px; height: 28px; border-radius: 50%; margin: 2px 0; }
+
+.white { background: #f8fafc; } .black { background: #020617; }
+
+/* ZAR */ #dice { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+
+.die { width: 40px; height: 40px; background: #fff; color: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; animation: roll 0.5s; }
+
+@keyframes roll { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } </style>
+
 </head>
-
-<body>
-
-<div id="rotate">Telefonu yatay çevir</div>
-
-<div id="popup" class="popup">
-  <div>
-    <h3>Takma Ad</h3>
-    <input id="nick" placeholder="Nickname">
-    <button onclick="create()">Oda Kur</button>
-    <input id="roomInput" placeholder="Oda Kodu">
-    <button onclick="join()">Katıl</button>
+<body><div id="menu">
+  <h1>Online Tavla</h1>
+  <input id="nick" placeholder="Nickname" />
+  <button onclick="createRoom()">Oda Kur</button>
+</div><div id="popup">
+  <div id="popupBox">
+    <h3>Oda Kodu</h3>
+    <div id="roomCode">ABCD</div>
+    <button onclick="copyCode()">Kopyala</button><br><br>
+    <button onclick="startGame()">Devam Et</button>
   </div>
-</div>
-
-<div id="app" style="display:none">
-  <header>
-    <div id="p1">Oyuncu 1</div>
-    <div id="p2">Oyuncu 2</div>
-  </header>
-
-  <div id="board">TAVLA ALANI</div>
-
-  <button onclick="roll()">🎲 Zar At</button>
-</div>
-
-<script>
-const socket = io();
-let roomCode = "";
-
-function create() {
-  const n = nick.value.trim();
-  if (!n) return alert("Nickname gir");
-  socket.emit("createRoom", { nickname:n });
+</div><div id="game">
+  <div id="dice">
+    <div class="die" id="d1">1</div>
+    <div class="die" id="d2">1</div>
+  </div>
+  <div id="board"></div>
+</div><script>
+function createRoom() {
+  if(!nick.value) return alert("Nickname gir");
+  popup.style.display='flex';
+  roomCode.textContent = Math.random().toString(36).substring(2,6).toUpperCase();
 }
 
-function join() {
-  const n = nick.value.trim();
-  if (!n) return alert("Nickname gir");
-  socket.emit("joinRoom", { room:roomInput.value.toUpperCase(), nickname:n });
+function copyCode(){
+  navigator.clipboard.writeText(roomCode.textContent);
+  alert('Kopyalandı');
 }
 
-socket.on("roomCreated", code => {
-  roomCode = code;
-  alert("ODA KODU: " + code);
-  popup.style.display="none";
-  app.style.display="flex";
-});
-
-socket.on("players", players => {
-  p1.innerText = players[0]?.name || "";
-  p2.innerText = players[1]?.name || "";
-});
-
-socket.on("startGame", () => {
-  popup.style.display="none";
-  app.style.display="flex";
-});
-
-function roll() {
-  socket.emit("rollDice", roomCode);
+function startGame(){
+  popup.style.display='none';
+  menu.style.display='none';
+  game.style.display='block';
+  buildBoard();
 }
 
-socket.on("diceResult", d => {
-  alert("Zarlar: " + d[0] + " - " + d[1]);
-});
-
-socket.on("roomError", () => alert("Oda bulunamadı"));
-</script>
-
-</body>
+function buildBoard(){
+  board.innerHTML='';
+  for(let i=0;i<24;i++){
+    let p=document.createElement('div');
+    p.className='point '+(i<12?'top':'bottom');
+    if(i===0||i===23){
+      for(let j=0;j<5;j++){
+        let s=document.createElement('div');
+        s.className='stone '+(i===0?'white':'black');
+        p.appendChild(s);
+      }
+    }
+    board.appendChild(p);
+  }
+}
+</script></body>
 </html>
