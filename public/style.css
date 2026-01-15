@@ -73,3 +73,21 @@
   z-index:10;
   font-size:18px;
 }
+#rotateWarning {
+  position: fixed;
+  inset: 0;
+  background: #0b3d2e;
+  color: white;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+}
+
+#rotateWarning button {
+  margin-top: 20px;
+  padding: 15px 25px;
+  font-size: 20px;
+}
