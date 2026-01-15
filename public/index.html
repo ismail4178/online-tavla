@@ -2,22 +2,28 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tavla Online</title>
 <link rel="stylesheet" href="style.css">
+<script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
-<button id="openGame">🎲 Tavla Oyna</button>
+<h1>🎲 Tavla Online</h1>
 
-<div id="popup">
-  <iframe src="game.html"></iframe>
+<input id="nick" placeholder="Kullanıcı Adı">
+
+<div class="box">
+  <button onclick="createRoom()">➕ Oda Oluştur</button>
+  <div id="roomInfo"></div>
 </div>
 
-<script>
-document.getElementById("openGame").onclick = () => {
-  document.getElementById("popup").style.display = "flex";
-};
-</script>
+<div class="box">
+  <button onclick="goJoin()">🔑 Odaya Gir</button>
+</div>
+
+<h3>📋 Açık Odalar</h3>
+<ul id="rooms"></ul>
+
+<script src="lobby.js"></script>
 </body>
 </html>
