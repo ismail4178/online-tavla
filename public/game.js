@@ -1,27 +1,65 @@
 const socket = io();
 
-const board = document.getElementById("board");
+// URL PARAMETRELERİ
+const params = new URLSearchParams(window.location.search);
+const roomId = params.get("room");
+const nick = params.get("nick");
 
-// TAHTA OLUŞTUR (24 HANE)
-for (let i = 0; i < 24; i++) {
-  const point = document.createElement("div");
-  point.className = "point";
-  point.innerText = i + 1;
-  board.appendChild(point);
+if (!roomId || !nick) {
+  alert("Nick veya oda bilgisi eksik");
+  window.location.href = "/";
 }
 
-// TEST TAŞLARI
+// SERVER'A ODAYA GİRDİĞİNİ BİLDİR
+socket.emit("joinRoom", { roomId, nick });
+
+// TAHTA
+const board = document.getElementById("board");
+board.innerHTML = "";
+
+// 24 HANE OLUŞTUR
+const points = [];
+for (let i = 0; i < 24; i++) {
+  const p = document.createElement("div");
+  p.className = "point";
+  p.dataset.index = i;
+  p.innerText = i + 1;
+  board.appendChild(p);
+  points.push(p);
+}
+
+// TAŞ EKLEME
 function addStone(pointIndex, color) {
   const stone = document.createElement("div");
   stone.className = "stone " + color;
-  board.children[pointIndex].appendChild(stone);
+  points[pointIndex].appendChild(stone);
 }
 
-// DENEME TAŞLARI (ekranda görünmesi için)
-addStone(0, "white");
-addStone(5, "white");
-addStone(18, "black");
-addStone(23, "black");
+// 🔥 GERÇEK TAVLA BAŞLANGIÇ DİZİLİMİ
+function setupBackgammon() {
+  // Beyaz
+  addStone(0, "white");
+  addStone(0, "white");
+
+  for (let i = 0; i < 5; i++) addStone(11, "white");
+  for (let i = 0; i < 3; i++) addStone(16, "white");
+  for (let i = 0; i < 5; i++) addStone(18, "white");
+
+  // Siyah
+  addStone(23, "black");
+  addStone(23, "black");
+
+  for (let i = 0; i < 5; i++) addStone(12, "black");
+  for (let i = 0; i < 3; i++) addStone(7, "black");
+  for (let i = 0; i < 5; i++) addStone(5, "black");
+}
+
+// SERVER “OYUN BAŞLASIN” DERSE
+socket.on("startGame", () => {
+  setupBackgammon();
+});
+
+// RAKİP KAÇARSA
 socket.on("opponentLeft", () => {
   alert("Rakip oyundan çıktı. Salona dönüyorsun.");
   window.location.href = "/";
