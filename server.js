@@ -8,30 +8,28 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let waitingPlayer = null;
+let rooms = [];
 
 io.on("connection", socket => {
-  if (waitingPlayer) {
-    socket.room = waitingPlayer.room;
-    socket.join(socket.room);
 
-    io.to(socket.room).emit("startGame");
-    waitingPlayer = null;
-  } else {
-    socket.room = "room-" + socket.id;
-    socket.join(socket.room);
-    waitingPlayer = socket;
-  }
+  socket.emit("rooms", rooms);
 
-  socket.on("move", data => {
-    socket.to(socket.room).emit("move", data);
+  socket.on("createRoom", nick => {
+    const roomId = Math.random().toString(36).substr(2, 6);
+    rooms.push(roomId);
+    socket.join(roomId);
+
+    socket.emit("roomCreated", roomId);
+    io.emit("rooms", rooms);
+  });
+
+  socket.on("joinRoom", roomId => {
+    socket.join(roomId);
   });
 
   socket.on("disconnect", () => {
-    io.to(socket.room).emit("opponentLeft");
+    // basit tutuyoruz
   });
 });
 
-server.listen(3000, () => {
-  console.log("Tavla server çalışıyor :3000");
-});
+server.listen(3000);
