@@ -1,57 +1,44 @@
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const path = require("path");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 
-// INDEX.HTML SERVE ET
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+app.use(express.static("public"));
 
-// ODA SİSTEMİ
 const rooms = {};
 
-function rollDice() {
-  return [
-    1 + Math.floor(Math.random() * 6),
-    1 + Math.floor(Math.random() * 6)
-  ];
-}
+io.on("connection", (socket) => {
 
-io.on("connection", socket => {
-
-  socket.on("createRoom", () => {
-    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-    rooms[code] = { players: [socket.id] };
+  socket.on("createRoom", (nick) => {
+    const code = Math.random().toString(36).substring(2,6).toUpperCase();
+    rooms[code] = { players: [{ id: socket.id, nick }] };
     socket.join(code);
     socket.emit("roomCreated", code);
   });
 
-  socket.on("joinRoom", code => {
-    const room = rooms[code];
-    if (!room) {
-      socket.emit("roomError", "Oda bulunamadı");
+  socket.on("joinRoom", ({ code, nick }) => {
+    if (!rooms[code] || rooms[code].players.length >= 2) {
+      socket.emit("errorMsg", "Oda bulunamadı veya dolu");
       return;
     }
-    if (room.players.length >= 2) {
-      socket.emit("roomError", "Oda dolu");
-      return;
-    }
-
-    room.players.push(socket.id);
+    rooms[code].players.push({ id: socket.id, nick });
     socket.join(code);
+    io.to(code).emit("startGame", rooms[code].players);
+  });
 
-    io.to(code).emit("gameStart", {
-      dice: rollDice()
-    });
+  socket.on("rollDice", (code) => {
+    const d1 = Math.ceil(Math.random() * 6);
+    const d2 = Math.ceil(Math.random() * 6);
+    io.to(code).emit("diceResult", { d1, d2 });
+  });
+
+  socket.on("disconnect", () => {
+    for (const code in rooms) {
+      rooms[code].players = rooms[code].players.filter(p => p.id !== socket.id);
+      if (rooms[code].players.length === 0) delete rooms[code];
+    }
   });
 
 });
 
-server.listen(process.env.PORT || 3000, () => {
-  console.log("Server çalışıyor");
-});
+http.listen(3000, () => console.log("Server 3000 portunda"));
