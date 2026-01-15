@@ -13,30 +13,22 @@
   <p>📱 Lütfen telefonu YATAY çevir</p>
   <button onclick="tryFullscreen()">Tam Ekran Başlat</button>
 </div>
-<button class="exit" onclick="exitGame()">❌ Çık</button>
+<button id="exitBtn">❌ Çık</button>
 
 <div id="board"></div>
 
 <script src="game.js"></script>
 
 <script>
-function tryFullscreen() {
-  document.documentElement.requestFullscreen?.();
-  screen.orientation?.lock("landscape").catch(()=>{});
-  document.getElementById("rotateWarning").style.display = "none";
-}
-
-function checkOrientation(){
-  if(window.innerHeight > window.innerWidth){
-    document.getElementById("rotateWarning").style.display = "flex";
-  } else {
-    document.getElementById("rotateWarning").style.display = "none";
+window.exitGame = function () {
+  if (confirm("Oyundan çıkmak istiyor musun?")) {
+    socket?.disconnect();
+    window.location.replace("/");
   }
-}
+};
 
-window.addEventListener("resize", checkOrientation);
-checkOrientation();
-  </script>
+document.getElementById("exitBtn").addEventListener("click", exitGame);
+</script>
 
 </body>
 </html>
