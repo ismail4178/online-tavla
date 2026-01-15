@@ -1,66 +1,101 @@
 const socket = io();
 
-// URL PARAMETRELERİ
+/* URL PARAMETRELERİ */
 const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room");
 const nick = params.get("nick");
 
 if (!roomId || !nick) {
-  alert("Nick veya oda bilgisi eksik");
+  alert("Nick veya oda eksik");
   window.location.href = "/";
 }
 
-// SERVER'A ODAYA GİRDİĞİNİ BİLDİR
 socket.emit("joinRoom", { roomId, nick });
 
-// TAHTA
-const board = document.getElementById("board");
-board.innerHTML = "";
+/* OYUNCU DURUM */
+let myTurn = false;
 
-// 24 HANE OLUŞTUR
-const points = [];
+const rollBtn = document.getElementById("rollBtn");
+const dice1 = document.getElementById("dice1");
+const dice2 = document.getElementById("dice2");
+
+/* TAHTA */
+const board = document.getElementById("board");
 for (let i = 0; i < 24; i++) {
   const p = document.createElement("div");
   p.className = "point";
-  p.dataset.index = i;
-  p.innerText = i + 1;
   board.appendChild(p);
-  points.push(p);
 }
 
-// TAŞ EKLEME
-function addStone(pointIndex, color) {
-  const stone = document.createElement("div");
-  stone.className = "stone " + color;
-  points[pointIndex].appendChild(stone);
+/* ZAR AT */
+rollBtn.onclick = () => {
+  if (!myTurn) return;
+
+  rollBtn.disabled = true;
+  animateDice();
+
+  setTimeout(() => {
+    const d1 = Math.ceil(Math.random() * 6);
+    const d2 = Math.ceil(Math.random() * 6);
+
+    dice1.textContent = d1;
+    dice2.textContent = d2;
+
+    socket.emit("rollDice", { roomId, d1, d2 });
+    endTurn();
+  }, 800);
+};
+
+function animateDice() {
+  let count = 0;
+  const anim = setInterval(() => {
+    dice1.textContent = Math.ceil(Math.random() * 6);
+    dice2.textContent = Math.ceil(Math.random() * 6);
+    count++;
+    if (count > 10) clearInterval(anim);
+  }, 80);
 }
 
-// 🔥 GERÇEK TAVLA BAŞLANGIÇ DİZİLİMİ
-function setupBackgammon() {
-  // Beyaz
-  addStone(0, "white");
-  addStone(0, "white");
-
-  for (let i = 0; i < 5; i++) addStone(11, "white");
-  for (let i = 0; i < 3; i++) addStone(16, "white");
-  for (let i = 0; i < 5; i++) addStone(18, "white");
-
-  // Siyah
-  addStone(23, "black");
-  addStone(23, "black");
-
-  for (let i = 0; i < 5; i++) addStone(12, "black");
-  for (let i = 0; i < 3; i++) addStone(7, "black");
-  for (let i = 0; i < 5; i++) addStone(5, "black");
+/* SIRA */
+function startTurn() {
+  myTurn = true;
+  rollBtn.disabled = false;
+  setActive(true);
 }
 
-// SERVER “OYUN BAŞLASIN” DERSE
-socket.on("startGame", () => {
-  setupBackgammon();
+function endTurn() {
+  myTurn = false;
+  rollBtn.disabled = true;
+  setActive(false);
+}
+
+/* AKTİF / PASİF */
+function setActive(active) {
+  document.getElementById("player1").classList.toggle("active", active);
+  document.getElementById("player1").classList.toggle("passive", !active);
+
+  document.getElementById("player2").classList.toggle("active", !active);
+  document.getElementById("player2").classList.toggle("passive", active);
+}
+
+/* SERVER'DAN */
+socket.on("startGame", players => {
+  document.getElementById("p1nick").innerText = players[0].nick;
+  document.getElementById("p2nick").innerText = players[1].nick;
+
+  // İlk giren başlasın
+  if (players[0].nick === nick) {
+    startTurn();
+  }
 });
 
-// RAKİP KAÇARSA
+socket.on("rollDice", data => {
+  dice1.textContent = data.d1;
+  dice2.textContent = data.d2;
+  startTurn();
+});
+
 socket.on("opponentLeft", () => {
-  alert("Rakip oyundan çıktı. Salona dönüyorsun.");
+  alert("Rakip oyundan çıktı");
   window.location.href = "/";
 });
