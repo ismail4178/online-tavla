@@ -30,12 +30,19 @@ io.on("connection", socket => {
   });
 
   socket.on("disconnect", () => {
-    for (let r in rooms) {
-      rooms[r] = rooms[r].filter(id => id !== socket.id);
-      if (rooms[r].length === 0) delete rooms[r];
-      else io.to(r).emit("opponentLeft");
+  for (let room in rooms) {
+    if (rooms[room].includes(socket.id)) {
+      rooms[room] = rooms[room].filter(id => id !== socket.id);
+
+      if (rooms[room].length === 0) {
+        delete rooms[room];
+      } else {
+        io.to(room).emit("opponentLeft");
+        delete rooms[room];
+      }
     }
-  });
+  }
+});
 
 });
 
