@@ -1,29 +1,30 @@
 const socket = io();
-
-const roomsUl = document.getElementById("rooms");
-const roomInfo = document.getElementById("roomInfo");
-
-socket.on("rooms", rooms => {
-  roomsUl.innerHTML = "";
-  rooms.forEach(r => {
-    const li = document.createElement("li");
-    li.innerText = r;
-    roomsUl.appendChild(li);
-  });
-});
+let myNick = "";
 
 function createRoom() {
-  const nick = document.getElementById("nick").value;
-  if (!nick) return alert("Nick yaz");
+  const nick = document.getElementById("nick").value.trim();
+  if (!nick) return alert("Kullanıcı adı zorunlu");
 
+  myNick = nick;
   socket.emit("createRoom", nick);
 }
 
+function joinRoom() {
+  const nick = document.getElementById("nick").value.trim();
+  if (!nick) return alert("Kullanıcı adı zorunlu");
+
+  const code = prompt("Oda kodunu gir");
+  if (!code) return;
+
+  window.location = `game.html?room=${code}&nick=${nick}`;
+}
+
 socket.on("roomCreated", roomId => {
-  roomInfo.innerHTML = `
-    <p>Oda ID: <b>${roomId}</b></p>
+  document.getElementById("roomInfo").innerHTML = `
+    <p>Oda Kodu:</p>
+    <b>${roomId}</b><br><br>
     <button onclick="copy('${roomId}')">📋 Kopyala</button>
-    <button onclick="share('${roomId}')">📤 Paylaş</button>
+    <button onclick="goGame('${roomId}')">🎮 Oyuna Gir</button>
   `;
 });
 
@@ -32,12 +33,6 @@ function copy(id) {
   alert("Kopyalandı");
 }
 
-function share(id) {
-  if (navigator.share) {
-    navigator.share({ text: "Tavla Oda Kodu: " + id });
-  }
-}
-
-function goJoin() {
-  window.location = "room.html";
+function goGame(room) {
+  window.location = `game.html?room=${room}&nick=${myNick}`;
 }
