@@ -35,3 +35,41 @@
 
 .white { background: #fff; }
 .black { background: #000; }
+/* GİRİŞ */
+.login {
+  background:#0b3d2e;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.login-box {
+  background:#c49b63;
+  padding:30px;
+  border-radius:20px;
+  width:90%;
+  max-width:350px;
+  text-align:center;
+}
+
+.login-box input {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  font-size:18px;
+}
+
+/* OYUN */
+.game-body {
+  margin:0;
+  background:#0b3d2e;
+}
+
+.exit {
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:10;
+  font-size:18px;
+}
