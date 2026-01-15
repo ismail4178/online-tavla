@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Odaya Gir</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<h2>🔑 Odaya Gir</h2>
+
+<input id="code" placeholder="Oda Kodu Yapıştır">
+<button onclick="join()">🎮 Odaya Git</button>
+
+<script>
+function join() {
+  const code = document.getElementById("code").value;
+  if (!code) return alert("Kod gir");
+
+  window.open(
+    "game.html?room=" + code,
+    "_self"
+  );
+}
+</script>
+</body>
+</html>
