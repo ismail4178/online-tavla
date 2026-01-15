@@ -73,3 +73,20 @@ io.on("connection", socket => {
 server.listen(3000, () => {
   console.log("✅ Tavla server çalışıyor :3000");
 });
+socket.on("leaveRoom", () => {
+  for (let room in rooms) {
+    if (rooms[room].includes(socket.id)) {
+      socket.to(room).emit("opponentLeft");
+      delete rooms[room];
+    }
+  }
+});
+
+socket.on("disconnect", () => {
+  for (let room in rooms) {
+    if (rooms[room].includes(socket.id)) {
+      socket.to(room).emit("opponentLeft");
+      delete rooms[room];
+    }
+  }
+});
