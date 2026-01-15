@@ -22,3 +22,7 @@ addStone(0, "white");
 addStone(5, "white");
 addStone(18, "black");
 addStone(23, "black");
+socket.on("opponentLeft", () => {
+  alert("Rakip oyundan çıktı. Salona dönüyorsun.");
+  window.location.href = "/";
+});
