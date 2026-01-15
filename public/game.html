@@ -9,7 +9,10 @@
 </head>
 
 <body class="game-body">
-
+<div id="rotateWarning">
+  <p>📱 Lütfen telefonu YATAY çevir</p>
+  <button onclick="tryFullscreen()">Tam Ekran Başlat</button>
+</div>
 <button class="exit" onclick="exitGame()">❌ Çık</button>
 
 <div id="board"></div>
@@ -17,15 +20,23 @@
 <script src="game.js"></script>
 
 <script>
-document.documentElement.requestFullscreen?.();
-screen.orientation?.lock("landscape");
+function tryFullscreen() {
+  document.documentElement.requestFullscreen?.();
+  screen.orientation?.lock("landscape").catch(()=>{});
+  document.getElementById("rotateWarning").style.display = "none";
+}
 
-function exitGame(){
-  if(confirm("Oyundan çıkmak istiyor musun?")){
-    window.location = "/";
+function checkOrientation(){
+  if(window.innerHeight > window.innerWidth){
+    document.getElementById("rotateWarning").style.display = "flex";
+  } else {
+    document.getElementById("rotateWarning").style.display = "none";
   }
 }
-</script>
+
+window.addEventListener("resize", checkOrientation);
+checkOrientation();
+  </script>
 
 </body>
 </html>
