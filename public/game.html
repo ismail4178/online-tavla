@@ -3,31 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tavla Oyunu</title>
+<title>Tavla Online</title>
+
 <link rel="stylesheet" href="style.css">
 <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body class="game-body">
-<div id="rotateWarning">
-  <p>📱 Lütfen telefonu YATAY çevir</p>
-  <button onclick="tryFullscreen()">Tam Ekran Başlat</button>
-</div>
-<button id="exitBtn">❌ Çık</button>
 
+<!-- SOL PANEL -->
+<div class="side left">
+  <h3>Oyuncular</h3>
+
+  <div id="player1" class="player active">
+    <span id="p1nick">Oyuncu 1</span>
+    <small>Sıra</small>
+  </div>
+
+  <div id="player2" class="player passive">
+    <span id="p2nick">Oyuncu 2</span>
+  </div>
+</div>
+
+<!-- ORTA: TAHTA -->
 <div id="board"></div>
+
+<!-- SAĞ PANEL -->
+<div class="side right">
+  <h3>Zar</h3>
+
+  <div id="diceArea">
+    <div class="dice" id="dice1">🎲</div>
+    <div class="dice" id="dice2">🎲</div>
+  </div>
+
+  <button id="rollBtn">ZAR AT</button>
+</div>
 
 <script src="game.js"></script>
 
 <script>
-window.exitGame = function () {
-  if (confirm("Oyundan çıkmak istiyor musun?")) {
-    socket?.disconnect();
-    window.location.replace("/");
-  }
-};
-
-document.getElementById("exitBtn").addEventListener("click", exitGame);
+/* TAM EKRAN + YATAY */
+function startFullscreen(){
+  document.documentElement.requestFullscreen?.();
+  screen.orientation?.lock("landscape").catch(()=>{});
+}
+startFullscreen();
 </script>
 
 </body>
